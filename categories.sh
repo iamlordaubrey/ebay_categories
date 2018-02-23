@@ -84,25 +84,65 @@ then
 
     DATA=""
     if [ ${#RESP[@]} -eq 0 ]; then
-        DATA="${DATA}No category with ID: '$1'"
+        DATA="${DATA}<table class="table">"
+        DATA="${DATA}
+        <thead>
+            <tr>
+                <th scope="col">No category with ID: '$1'</th>
+            </tr>
+        </thead>
+        "
+        DATA="${DATA}</table>"
+
         echo "No category with ID: '$1'"
     else
-        DATA="${DATA}<table>"
+        DATA="${DATA}<table class="table">"
+        DATA="${DATA}
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">CATEGORY ID</th>
+                <th scope="col">CATEGORY NAME</th>
+                <th scope="col">CATEGORY LEVEL</th>
+                <th scope="col">BEST OFFER ENABLED</th>
+            </tr>
+        </thead>
+        "
+        index=1
         for j in ${RESP[@]}
         do
-            DATA="${DATA}<tr><td>$j</td></tr>"
+            cat_id="$(cut -d'|' -f1 <<<"$j")"
+            cat_name="$(cut -d'|' -f2 <<<"$j")"
+            cat_level="$(cut -d'|' -f3 <<<"$j")"
+            best_offer_enabled="$(cut -d'|' -f4 <<<"$j")"
+
+            DATA="${DATA}
+            <tbody>
+                <tr>
+                    <th scope="row">$index</th>
+                    <td>$cat_id</td>
+                    <td>$cat_name</td>
+                    <td>$cat_level</td>
+                    <td>$best_offer_enabled</td>
+                </tr>
+            </tbody>
+            "
+            let index=${index}+1
         done
-    "${DATA} </table>"
+        DATA="${DATA}</table>"
     fi
 
 
     HTML="
     <!DOCTYPE HTML>
     <html>
-    <head></head>
+    <head>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <link href="styles/cat.css" rel="stylesheet" type="text/css" />
+    </head>
     <body>
-        <p>Yo bruh!</p>
         $DATA
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
     </body>
     </html>
     "

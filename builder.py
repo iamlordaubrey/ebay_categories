@@ -21,13 +21,14 @@ def xml_parser(root_tag):
         category_values = [
             category_id, category_name, category_level, best_offer_enabled, category_parent_id, leaf_category
         ]
-        category_values = [i.text if i is not None else None for i in category_values]
+        category_values = [i.text if i is not None else 'None' for i in category_values]
         category_values[0] = int(category_values[0])
         category_values[2] = int(category_values[2])
         category_values[4] = int(category_values[4])
 
         closure_values = (category_values[4], category_values[0], category_values[2])
 
+        print('cat val', category_values)
         yield category_values, closure_values
 
 
