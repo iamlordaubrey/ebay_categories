@@ -1,0 +1,70 @@
+
+School Equip 400
+   - Books 100
+       - Hard cover 500
+   - Pen 200
+   - Pencil 300
+
+
+
+category_id == descendant_id
+category_level == depth
+category_parent_id == ancestor_id
+
+INSERT INTO category (category_id, category_name, category_level, best_offer_enabled, parent_id) VALUES (100, 'Books', 2, 1, 50), (200, 'Pen', 2, 1, 50), (300, 'Pencil', 2, 1, 50), (400, 'School equipment', 1, 1, 400), (500, 'Hard cover', 3, 1, 100);
+
+INSERT INTO category_closure (ancestor_id, descendant_id, depth) VALUES (400, 400, 1), (400, 100, 2), (100, 500, 3), (400, 200, 2), (400, 300, 2);
+
+INSERT INTO category_closure (ancestor_id, descendant_id, depth) VALUES (400, 400, 0), (100, 100, 0), (500, 500, 0), (200, 200, 0), (300, 300, 0), (400, 100, 1), (400, 200, 1), (400, 300, 1), (400, 500, 2), (100, 500, 1);
+
+SELECT c.category_id, c.category_name FROM category c INNER JOIN category_closure cc ON cc.descendant_id = c.category_id WHERE cc.ancestor_id = 100;
+
+SELECT c.category_id, c.category_name FROM category c INNER JOIN category_closure cc ON cc.descendant_id = c.category_id WHERE cc.ancestor_id = 12576;
+
+seemingly correct: select ca.category_id from category ca where ca.category_id in (select cc.descendant_id from category_closure as cc where cc.ancestor_id = 88739);
+
+with recursive nt(cat_id)
+as (
+  select descendant_id
+  from category_closure
+  where ancestor_id = 400
+  union
+  select descendant_id
+  from category_closure, nt
+  where category_closure.ancestor_id = nt.cat_id
+)
+select *
+from category
+where category_id in nt
+order by category_level;
+
+
+sqlite> select * from category;
+100|Books|2|1|50
+200|Pen|2|1|50
+300|Pencil|2|1|50
+400|School equipment|1|1|400
+500|Hard cover|3|1|100
+
+
+sqlite> select * from category_closure;
+400|400|1
+400|100|2
+400|200|2
+400|300|2
+100|100|1
+100|500|2
+200|200|1
+300|300|1
+
+
+
+--rebuild
+    * run query_ebay.sh file to hit GetCategories API
+    * create SQLite db. If already exist, delete and create
+
+--render <category_id>
+    * create a file named <category_id>.html
+        * file should display the category tree, rooted at the given ID
+        * tree should be rendered from the data in the database
+        * if db does not exist or no category with the given ID could be found, exit with an error
