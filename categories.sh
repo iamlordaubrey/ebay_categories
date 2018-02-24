@@ -40,20 +40,13 @@ render_func()
 
     # Make query, saving response in array RESP
     RESP=($(
-    sqlite3 $DB_FILE "with recursive nt(cat_id)
-    as (
-      select descendant_id
-      from category_closure
-      where ancestor_id = $arg
-      union
-      select descendant_id
-      from category_closure, nt
-      where category_closure.ancestor_id = nt.cat_id
-    )
-    select category_id, category_name, category_level, best_offer_enabled
-    from category
-    where category_id in nt
-    order by category_level;
+    sqlite3 $DB_FILE "
+    SELECT c.category_id, c.category_name, c.category_level, c.best_offer_enabled
+    FROM category c
+    INNER JOIN category_closure cc
+    ON cc.descendant_id = c.category_id
+    WHERE cc.ancestor_id = $arg
+    ORDER BY c.category_level;
     "))
 }
 

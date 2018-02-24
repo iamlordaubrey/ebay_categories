@@ -5,7 +5,7 @@ School Equip 400
    - Pen 200
    - Pencil 300
 
-
+Diff between Common Table Expression and Closure tables: https://www.adimian.com/blog/2014/10/cte-and-closure-tables/
 
 category_id == descendant_id
 category_level == depth
@@ -19,9 +19,8 @@ INSERT INTO category_closure (ancestor_id, descendant_id, depth) VALUES (400, 40
 
 SELECT c.category_id, c.category_name FROM category c INNER JOIN category_closure cc ON cc.descendant_id = c.category_id WHERE cc.ancestor_id = 100;
 
-SELECT c.category_id, c.category_name FROM category c INNER JOIN category_closure cc ON cc.descendant_id = c.category_id WHERE cc.ancestor_id = 12576;
-
-seemingly correct: select ca.category_id from category ca where ca.category_id in (select cc.descendant_id from category_closure as cc where cc.ancestor_id = 88739);
+seemingly correct:
+select ca.category_id from category ca where ca.category_id in (select cc.descendant_id from category_closure as cc where cc.ancestor_id = 88739);
 
 with recursive nt(cat_id)
 as (
