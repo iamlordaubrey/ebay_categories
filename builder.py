@@ -6,10 +6,14 @@ result = subprocess.run('./query_ebay.sh', stdout=subprocess.PIPE).stdout
 
 # Parse xml from result (string) into an element, specifying root tag of CategoryArray (index 4)
 root = ET.fromstring(result)[4]
-print(len(root))
 
 
 def xml_parser(root_tag):
+    """
+    Parses a tree, returning values for category and closure tables
+    :param root_tag: The root element
+    :return: A tuple of category values and closure values
+    """
     for child in root_tag:
         best_offer_enabled = child.find('{urn:ebay:apis:eBLBaseComponents}BestOfferEnabled')
         category_id = child.find('{urn:ebay:apis:eBLBaseComponents}CategoryID')
@@ -28,18 +32,21 @@ def xml_parser(root_tag):
 
         closure_values = (category_values[4], category_values[0], category_values[2])
 
-        print('cat val', category_values)
         yield category_values, closure_values
 
 
 def db_insert(values):
+    """
+    Inserts values to database tables
+    :param values: A tuple of category values and closure values
+    :return: None (implicitly)
+    """
     category_val = values[0]
     closure_val = values[1]
 
     # Try in-memory database https://stackoverflow.com/a/32239587/4333429
     # OR
     # use sql transactions https://stackoverflow.com/questions/5942402/python-csv-to-sqlite/7137270#7137270
-    # print(closure_val)
     c.execute('INSERT INTO category VALUES (?, ?, ?, ?, ?, ?)', category_val)
     c.execute('INSERT INTO category_closure VALUES (?, ?, ?)', closure_val)
 
