@@ -11,7 +11,7 @@ category_id == descendant_id
 category_level == depth
 category_parent_id == ancestor_id
 
-INSERT INTO category (category_id, category_name, category_level, best_offer_enabled, parent_id) VALUES (100, 'Books', 2, 1, 50), (200, 'Pen', 2, 1, 50), (300, 'Pencil', 2, 1, 50), (400, 'School equipment', 1, 1, 400), (500, 'Hard cover', 3, 1, 100);
+INSERT INTO category (category_id, category_name, category_level, best_offer_enabled, category_parent_id) VALUES (100, 'Books', 2, 1, 50), (200, 'Pen', 2, 1, 50), (300, 'Pencil', 2, 1, 50), (400, 'School equipment', 1, 1, 400), (500, 'Hard cover', 3, 1, 100);
 
 INSERT INTO category_closure (ancestor_id, descendant_id, depth) VALUES (400, 400, 1), (400, 100, 2), (100, 500, 3), (400, 200, 2), (400, 300, 2);
 
