@@ -3,6 +3,16 @@
 DB_FILE='pmath.db'
 RESP=''
 
+read -d '' HELP_STRING <<- _EOF_
+    Usage:
+        ./categories.sh <command>
+
+    Commands:
+        --rebuild
+        --render <category_id>
+_EOF_
+
+
 rebuild_func()
 {
     echo "Rebuild function called. Please wait..."
@@ -14,6 +24,7 @@ rebuild_func()
     sqlite3 $DB_FILE < create_tables.sql
     echo "Database and tables created!\nPopulating tables..."
 
+    # Call builder script
     python builder.py
 }
 
@@ -22,12 +33,12 @@ render_func()
     echo "Render function called"
     arg=$1
     HTML_FILENAME="$arg.html"
-    echo "$HTML_FILENAME"
 
     # Remove html file if present
     html_file="$HTML_FILENAME"
     [[ -f $html_file ]] && rm $html_file
 
+    # Make query, saving response in array RESP
     RESP=($(
     sqlite3 $DB_FILE "with recursive nt(cat_id)
     as (
@@ -46,21 +57,12 @@ render_func()
     "))
 }
 
-read -d '' HELP_STRING <<- _EOF_
-    Usage:
-        ./categories.sh <command>
-
-    Commands:
-        --rebuild
-        --render <category_id>
-_EOF_
-
-
 usage()
 {
     echo "$HELP_STRING"
 
 }
+
 
 case $1 in
     --rebuild )     rebuild_func
@@ -81,8 +83,8 @@ esac
 if [ "$render" == "true" ]
 then
     render_func "$@"
-
     DATA=""
+
     if [ ${#RESP[@]} -eq 0 ]; then
         DATA="${DATA}<table class="table">"
         DATA="${DATA}
@@ -109,6 +111,7 @@ then
         </thead>
         "
         index=1
+
         for j in ${RESP[@]}
         do
             cat_id="$(cut -d'|' -f1 <<<"$j")"
@@ -132,7 +135,6 @@ then
         DATA="${DATA}</table>"
     fi
 
-
     HTML="
     <!DOCTYPE HTML>
     <html>
@@ -147,7 +149,4 @@ then
     </html>
     "
     echo $HTML >> $HTML_FILENAME
-
-    count=${#RESP[@]}
-    echo $count
 fi
