@@ -21,7 +21,7 @@ rebuild_func()
     [[ -f $DB_FILE ]] && rm $DB_FILE
 
     # Create database and tables
-    sqlite3 $DB_FILE < create_tables.sql
+    sqlite3 $DB_FILE < sql/create_tables.sql
     echo "Database and tables created!\nPopulating tables..."
 
     # Call builder script
