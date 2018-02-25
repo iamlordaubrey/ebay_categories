@@ -67,3 +67,7 @@ sqlite> select * from category_closure;
         * file should display the category tree, rooted at the given ID
         * tree should be rendered from the data in the database
         * if db does not exist or no category with the given ID could be found, exit with an error
+
+
+** Fix create tables caps vs non-caps
+**

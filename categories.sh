@@ -39,7 +39,7 @@ render_func()
     [[ -f $html_file ]] && rm $html_file
 
     # Make query, saving response in array RESP
-    RESP=($(
+    RESP=$(
     sqlite3 $DB_FILE "
     SELECT c.category_id, c.category_name, c.category_level, c.best_offer_enabled
     FROM category c
@@ -47,7 +47,7 @@ render_func()
     ON cc.descendant_id = c.category_id
     WHERE cc.ancestor_id = $arg
     ORDER BY c.category_level;
-    "))
+    ")
 }
 
 usage()
@@ -76,34 +76,33 @@ esac
 if [ "$render" == "true" ]
 then
     render_func "$@"
-    DATA=""
+    DATA="<table class="table">"
+    DATA="${DATA}
+    <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">CATEGORY ID</th>
+            <th scope="col">CATEGORY NAME</th>
+            <th scope="col">CATEGORY LEVEL</th>
+            <th scope="col">BEST OFFER ENABLED</th>
+        </tr>
+    </thead>
+    "
 
-    if [ ${#RESP[@]} -eq 0 ]; then
-        DATA="${DATA}<table class="table">"
+    if [ -z "$RESP" ]; then
+
         DATA="${DATA}
-        <thead>
+        <tbody>
             <tr>
-                <th scope="col">No category with ID: '$1'</th>
+                <th colspan="6"><strong>No category with ID: '$1'</strong></th>
             </tr>
-        </thead>
+        </tbody>
         "
-        DATA="${DATA}</table>"
-
         echo "No category with ID: '$1'"
     else
-        DATA="${DATA}<table class="table">"
-        DATA="${DATA}
-        <thead>
-            <tr>
-                <th scope="col">#</th>
-                <th scope="col">CATEGORY ID</th>
-                <th scope="col">CATEGORY NAME</th>
-                <th scope="col">CATEGORY LEVEL</th>
-                <th scope="col">BEST OFFER ENABLED</th>
-            </tr>
-        </thead>
-        "
+
         index=1
+        IFS=$'\n'
 
         for j in ${RESP[@]}
         do
@@ -125,21 +124,21 @@ then
             "
             let index=${index}+1
         done
-        DATA="${DATA}</table>"
     fi
+    DATA="${DATA}</table>"
 
-    HTML="
-    <!DOCTYPE HTML>
+    HTML="<!DOCTYPE HTML>
     <html>
     <head>
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-        <link href="styles/cat.css" rel="stylesheet" type="text/css" />
+    <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css' integrity='sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm' crossorigin='anonymous'>
+    <link href='styles/cat.css' rel='stylesheet' type='text/css' />
     </head>
     <body>
-        $DATA
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    $DATA
+    <script src='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js' integrity='sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl' crossorigin='anonymous'></script>
     </body>
     </html>
     "
+
     echo $HTML >> $HTML_FILENAME
 fi
