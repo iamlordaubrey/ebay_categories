@@ -1,9 +1,41 @@
 
-School Equip 400
-   - Books 100
-       - Hard cover 500
-   - Pen 200
-   - Pencil 300
+School Equip 40
+   - Books 10
+       - Hard cover 50
+        - Journal 70
+        - Diary 80
+        - Novel 90
+            - Romance 100
+            - SciFi 110
+       - Soft cover 60
+   - Pen 20
+   - Pencil 30
+
+INSERT INTO category_closure (ancestor_id, descendant_id, depth)
+VALUES
+[(40, 40, 0),
+(10, 10, 0),
+(20, 20, 0),
+(30, 30, 0),
+(50, 50, 0),
+(60, 60, 0),
+(70, 70, 0),
+(80, 80, 0),
+(90, 90, 0),
+(100, 100, 0),
+(110, 110, 0),],
+
+
+(40, 10, 1), (40, 20, 1), (40, 30, 1),
+(40, 50, 2), (40, 60, 2),
+(40, 70, 3), (40, 80, 3), (40, 90, 3),
+(40, 100, 4), (40, 110, 4),
+(10, 50, 1), (10, 60, 1),
+(10, 70, 2), (10, 80, 2), (10, 90, 2),
+(10, 100, 3), (10, 110, 3),
+(50, 70, 1), (50, 80, 1), (50, 90, 1),
+(50, 100, 2), (50, 110, 2),
+(90, 100, 1), (90, 110, 1);
 
 Diff between Common Table Expression and Closure tables: https://www.adimian.com/blog/2014/10/cte-and-closure-tables/
 
@@ -11,11 +43,39 @@ category_id == descendant_id
 category_level == depth
 category_parent_id == ancestor_id
 
-INSERT INTO category (category_id, category_name, category_level, best_offer_enabled, category_parent_id) VALUES (100, 'Books', 2, 1, 50), (200, 'Pen', 2, 1, 50), (300, 'Pencil', 2, 1, 50), (400, 'School equipment', 1, 1, 400), (500, 'Hard cover', 3, 1, 100);
+INSERT INTO category (category_id, category_name, category_level, best_offer_enabled, category_parent_id)
+VALUES
+(40, 'School Equip', 1, 'true', 40)
+(10, 'Books', 2, 'true', 40)
+(20, 'Pen', 2, 'true', 40)
+(30, 'Pencil', 2, 'true', 40)
+(50, 'Hard cover', 3, 'true', 10)
+(60, 'Soft cover', 3, 'true', 10)
+(70, 'Journal', 4, 'true', 50)
+(80, 'Diary', 4, 'true', 50)
+(90, 'Novel', 4, 'true', 50)
+(100, 'Romance', 5, 'true', 90)
+(110, 'SciFi', 5, 'true', 90);
 
-INSERT INTO category_closure (ancestor_id, descendant_id, depth) VALUES (400, 400, 1), (400, 100, 2), (100, 500, 3), (400, 200, 2), (400, 300, 2);
+INSERT INTO category_closure (ancestor_id, descendant_id, depth)
+VALUES
+(40, 40, 0), (10, 10, 0), (20, 20, 0), (30, 30, 0), (50, 50, 0), (60, 60, 0), (70, 70, 0), (80, 80, 0), (90, 90, 0), (100, 100, 0), (110, 110, 0),
+(40, 10, 1), (40, 20, 1), (40, 30, 1),
+(40, 50, 2), (40, 60, 2),
+(40, 70, 3), (40, 80, 3), (40, 90, 3),
+(40, 100, 4), (40, 110, 4),
+(10, 50, 1), (10, 60, 1),
+(10, 70, 2), (10, 80, 2), (10, 90, 2),
+(10, 100, 3), (10, 110, 3),
+(50, 70, 1), (50, 80, 1), (50, 90, 1),
+(50, 100, 2), (50, 110, 2),
+(90, 100, 1), (90, 110, 1);
 
-INSERT INTO category_closure (ancestor_id, descendant_id, depth) VALUES (400, 400, 0), (100, 100, 0), (500, 500, 0), (200, 200, 0), (300, 300, 0), (400, 100, 1), (400, 200, 1), (400, 300, 1), (400, 500, 2), (100, 500, 1);
+- get descendant_id
+    - is leaf cat?
+        - if so leave it
+    - else
+        -
 
 SELECT c.category_id, c.category_name FROM category c INNER JOIN category_closure cc ON cc.descendant_id = c.category_id WHERE cc.ancestor_id = 100;
 
@@ -70,4 +130,4 @@ sqlite> select * from category_closure;
 
 
 ** Fix create tables caps vs non-caps
-**
+** Remove redundant columns

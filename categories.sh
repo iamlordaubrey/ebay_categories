@@ -41,7 +41,7 @@ render_func()
     # Make query, saving response in array RESP
     RESP=$(
     sqlite3 $DB_FILE "
-    SELECT c.category_id, c.category_name, c.category_level, c.best_offer_enabled
+    SELECT c.category_parent_id, c.category_id, c.category_name, c.category_level, c.best_offer_enabled
     FROM category c
     INNER JOIN category_closure cc
     ON cc.descendant_id = c.category_id
@@ -76,15 +76,16 @@ esac
 if [ "$render" == "true" ]
 then
     render_func "$@"
-    DATA="<table class="table">"
+    DATA="<table class='table table-striped table-bordered table-hover'>"
     DATA="${DATA}
-    <thead>
+    <thead class='thead-dark'>
         <tr>
-            <th scope="col">#</th>
-            <th scope="col">CATEGORY ID</th>
-            <th scope="col">CATEGORY NAME</th>
-            <th scope="col">CATEGORY LEVEL</th>
-            <th scope="col">BEST OFFER ENABLED</th>
+            <th scope='col'>#</th>
+            <th scope='col'>CATEGORY PARENT ID</th>
+            <th scope='col'>CATEGORY ID</th>
+            <th scope='col'>CATEGORY NAME</th>
+            <th scope='col'>CATEGORY LEVEL</th>
+            <th scope='col'>BEST OFFER ENABLED</th>
         </tr>
     </thead>
     "
@@ -94,7 +95,7 @@ then
         DATA="${DATA}
         <tbody>
             <tr>
-                <th colspan="6"><strong>No category with ID: '$1'</strong></th>
+                <th colspan='6'><strong>No category with ID: '$1'</strong></th>
             </tr>
         </tbody>
         "
@@ -106,15 +107,17 @@ then
 
         for j in ${RESP[@]}
         do
-            cat_id="$(cut -d'|' -f1 <<<"$j")"
-            cat_name="$(cut -d'|' -f2 <<<"$j")"
-            cat_level="$(cut -d'|' -f3 <<<"$j")"
-            best_offer_enabled="$(cut -d'|' -f4 <<<"$j")"
+            cat_parent_id="$(cut -d'|' -f1 <<<"$j")"
+            cat_id="$(cut -d'|' -f2 <<<"$j")"
+            cat_name="$(cut -d'|' -f3 <<<"$j")"
+            cat_level="$(cut -d'|' -f4 <<<"$j")"
+            best_offer_enabled="$(cut -d'|' -f5 <<<"$j")"
 
             DATA="${DATA}
             <tbody>
                 <tr>
-                    <th scope="row">$index</th>
+                    <th scope='row'>$index</th>
+                    <td>$cat_parent_id</td>
                     <td>$cat_id</td>
                     <td>$cat_name</td>
                     <td>$cat_level</td>
