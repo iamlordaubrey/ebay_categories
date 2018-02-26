@@ -6,49 +6,96 @@ result = subprocess.run('./query_ebay.sh', stdout=subprocess.PIPE).stdout
 
 # Parse xml from result (string) into an element, specifying root tag of CategoryArray (index 4)
 root = ET.fromstring(result)[4]
-print(len(root))
+db_name = 'pmath.db'
+
+CategoryID = '{urn:ebay:apis:eBLBaseComponents}CategoryID'
+CategoryName = '{urn:ebay:apis:eBLBaseComponents}CategoryName'
+CategoryLevel = '{urn:ebay:apis:eBLBaseComponents}CategoryLevel'
+CategoryParentID = '{urn:ebay:apis:eBLBaseComponents}CategoryParentID'
+BestOfferEnabled = '{urn:ebay:apis:eBLBaseComponents}BestOfferEnabled'
+LeafCategory = '{urn:ebay:apis:eBLBaseComponents}LeafCategory'
+
+root_nodes = [element for element in list(root) if element.find(CategoryID).text == element.find(CategoryParentID).text]
 
 
-def xml_parser(root_tag):
-    for child in root_tag:
-        best_offer_enabled = child.find('{urn:ebay:apis:eBLBaseComponents}BestOfferEnabled')
-        category_id = child.find('{urn:ebay:apis:eBLBaseComponents}CategoryID')
-        category_name = child.find('{urn:ebay:apis:eBLBaseComponents}CategoryName')
-        category_level = child.find('{urn:ebay:apis:eBLBaseComponents}CategoryLevel')
-        category_parent_id = child.find('{urn:ebay:apis:eBLBaseComponents}CategoryParentID')
-        leaf_category = child.find('{urn:ebay:apis:eBLBaseComponents}LeafCategory')
+def closure_values(the_root_node):
+    queue = [the_root_node]
+    exclusive_list = []
+    values_list = []
+    while len(queue):
+        # List of root_node ids
+        ids = [n.find(CategoryID).text for n in queue]
+        current_node = queue.pop(0)
 
-        category_values = [
-            category_id, category_name, category_level, best_offer_enabled, category_parent_id, leaf_category
+        values = [the_root_node.find(CategoryID).text, current_node.find(CategoryID).text]
+        values[0] = int(values[0])
+        values[1] = int(values[1])
+
+        values_list.append((values[0], values[1]))
+
+        current_id = current_node.find(CategoryID).text
+        array_node = [
+            element for element in list(root)
+            if current_id == element.find(CategoryParentID).text
+            and element.find(CategoryID).text not in ids
         ]
-        category_values = [i.text if i is not None else None for i in category_values]
-        category_values[0] = int(category_values[0])
-        category_values[2] = int(category_values[2])
-        category_values[4] = int(category_values[4])
 
-        closure_values = (category_values[4], category_values[0], category_values[2])
+        exclusive_list.append(current_id)
 
-        yield category_values, closure_values
+        for child in array_node:
+            queue.append(child)
 
+    # Do a db insertion here / call a db insertion function
+    print(values_list, 'closure')
+    db_insert(values_list, 'category_closure')
 
-def db_insert(values):
-    category_val = values[0]
-    closure_val = values[1]
-
-    # Try in-memory database https://stackoverflow.com/a/32239587/4333429
-    # OR
-    # use sql transactions https://stackoverflow.com/questions/5942402/python-csv-to-sqlite/7137270#7137270
-    # print(closure_val)
-    c.execute('INSERT INTO category VALUES (?, ?, ?, ?, ?, ?)', category_val)
-    c.execute('INSERT INTO category_closure VALUES (?, ?, ?)', closure_val)
+    for node in [
+        element for element in list(root)
+        if the_root_node.find(CategoryID).text == element.find(CategoryParentID).text
+        and element.find(CategoryID).text != the_root_node.find(CategoryID).text
+    ]:
+        closure_values(node)
 
 
-if __name__ == '__main__':
-    conn = sqlite3.connect('pmath.db')
+def category_values():
+    values_list = []
+    for element in list(root):
+        cat_id = element.find(CategoryID)
+        cat_name = element.find(CategoryName)
+        cat_level = element.find(CategoryLevel)
+        cat_parent_id = element.find(CategoryParentID)
+        best_offer_enabled = element.find(BestOfferEnabled)
+
+        values = [
+            cat_id, cat_name, cat_level, cat_parent_id, best_offer_enabled
+        ]
+        values = [i.text if i is not None else 'Null' for i in values]
+        values[0] = int(values[0])
+        values[2] = int(values[2])
+        values[3] = int(values[3])
+
+        values_list.append((values[0], values[1], values[2], values[3], values[4]))
+
+    # Do a db insertion here / call a db insertion function
+    print(values_list, 'category')
+    db_insert(values_list, 'category')
+
+
+def db_insert(values, table='category'):
+    category_table = {
+        'category': '(?, ?, ?, ?, ?)',
+        'category_closure': '(?,?)',
+    }
+
+    conn = sqlite3.connect(db_name)
     c = conn.cursor()
-
-    for value in xml_parser(root):
-        db_insert(value)
+    a = 'insert into {0} values {1}'.format(table, category_table[table])
+    c.executemany(a, values)
 
     conn.commit()
     conn.close()
+
+
+if __name__ == '__main__':
+    [closure_values(node) for node in root_nodes]
+    category_values()
